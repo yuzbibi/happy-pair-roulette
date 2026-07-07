@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ハッピーペアルーレット｜授業グループ分けアプリ</title>
+  <meta name="description" content="授業でのグループ分けをスマートに。2人組・3人組・4人組に対応した先生向けグループ分けツール。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 管理画面 -->
+  <div id="app-admin" class="screen active">
+    <header class="admin-header">
+      <div class="header-logo">
+        <span class="logo-icon">👥</span>
+        <h1>ハッピーペアルーレット</h1>
+      </div>
+      <p class="header-sub">授業グループ分けツール</p>
+    </header>
+
+    <main class="admin-main">
+      <!-- タブナビ -->
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="session" id="tab-session">
+          <span class="tab-icon">🎲</span>
+          グループ分け
+        </button>
+        <button class="tab-btn" data-tab="classes" id="tab-classes">
+          <span class="tab-icon">📋</span>
+          クラス管理
+        </button>
+      </nav>
+
+      <!-- グループ分けタブ -->
+      <div id="tab-content-session" class="tab-content active">
+        <div class="session-container">
+
+          <!-- Step 1: クラス選択 -->
+          <div class="step-card" id="step-class">
+            <div class="step-header">
+              <div class="step-number">1</div>
+              <h2 class="step-title">クラスを選択</h2>
+            </div>
+            <div class="class-select-area">
+              <div id="class-select-list" class="class-select-list">
+                <p class="empty-hint">クラス管理タブでクラスを登録してください</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: 欠席者選択 -->
+          <div class="step-card" id="step-absent">
+            <div class="step-header">
+              <div class="step-number">2</div>
+              <h2 class="step-title">欠席者を選択</h2>
+              <span class="step-badge" id="absent-count-badge">0人欠席</span>
+            </div>
+            <div id="absent-select-area" class="student-grid absent-grid">
+              <p class="empty-hint">クラスを選択してください</p>
+            </div>
+          </div>
+
+          <!-- Step 3: グループ人数 -->
+          <div class="step-card" id="step-groupsize">
+            <div class="step-header">
+              <div class="step-number">3</div>
+              <h2 class="step-title">グループの人数</h2>
+            </div>
+            <div class="group-size-selector">
+              <button class="size-btn" data-size="1" id="size-btn-1">
+                <span class="size-icon">🎯</span>
+                <span class="size-label">1人</span>
+              </button>
+              <button class="size-btn" data-size="2" id="size-btn-2">
+                <span class="size-icon">👤👤</span>
+                <span class="size-label">2人組</span>
+              </button>
+              <button class="size-btn" data-size="3" id="size-btn-3">
+                <span class="size-icon">👤👤👤</span>
+                <span class="size-label">3人組</span>
+              </button>
+              <button class="size-btn active" data-size="4" id="size-btn-4">
+                <span class="size-icon">👤👤<br>👤👤</span>
+                <span class="size-label">4人組</span>
+              </button>
+            </div>
+            <div class="remainder-option" id="remainder-option">
+              <span class="remainder-label">余りが出た場合</span>
+              <div class="remainder-btns">
+                <button class="remainder-btn active" data-mode="distribute" id="remainder-distribute">
+                  <span>＋1</span> どこかのグループに入れる
+                </button>
+                <button class="remainder-btn" data-mode="separate" id="remainder-separate">
+                  <span>🔀</span> 小グループにする
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: 重複警告＆シャッフル -->
+          <div class="step-card" id="step-shuffle">
+            <div class="step-header">
+              <div class="step-number">4</div>
+              <h2 class="step-title">シャッフル</h2>
+            </div>
+            <div id="duplicate-warning" class="duplicate-warning hidden">
+              <span class="warning-icon">⚠️</span>
+              <div class="warning-text">
+                <strong>重複のお知らせ</strong>
+                <p id="warning-message"></p>
+              </div>
+            </div>
+            <div id="shuffle-info" class="shuffle-info"></div>
+            <button class="shuffle-btn" id="shuffle-btn" disabled>
+              <span class="shuffle-icon">🔀</span>
+              シャッフル開始！
+            </button>
+            <button class="reset-history-btn" id="reset-history-btn">
+              <span>🔄</span> 組み合わせ履歴をリセット
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- クラス管理タブ -->
+      <div id="tab-content-classes" class="tab-content">
+        <div class="classes-container">
+          <div class="classes-list-panel">
+            <div class="panel-header">
+              <h2>クラス一覧</h2>
+              <button class="btn-add-class" id="btn-add-class">
+                ＋ クラスを追加
+              </button>
+            </div>
+            <div id="classes-list" class="classes-list">
+              <p class="empty-hint">クラスがありません</p>
+            </div>
+          </div>
+          <div class="class-edit-panel" id="class-edit-panel">
+            <div class="panel-header">
+              <h2 id="edit-panel-title">クラスを選択</h2>
+            </div>
+            <div id="class-edit-form" class="class-edit-form hidden">
+              <div class="form-group">
+                <label for="class-name-input">クラス名</label>
+                <input type="text" id="class-name-input" placeholder="例：5年1組" maxlength="20">
+              </div>
+              <div class="form-group">
+                <label>生徒名簿 <span class="label-hint">（1行1名、5文字以内）</span></label>
+                <textarea id="students-textarea" placeholder="山田太郎&#10;佐藤花子&#10;鈴木一郎&#10;..." rows="12"></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn-save" id="btn-save-class">💾 保存</button>
+                <button class="btn-delete" id="btn-delete-class">🗑️ 削除</button>
+                <button class="btn-cancel" id="btn-cancel-class">キャンセル</button>
+              </div>
+            </div>
+            <div id="class-edit-placeholder" class="class-edit-placeholder">
+              <div class="placeholder-icon">📋</div>
+              <p>左のリストからクラスを選択するか、<br>「＋ クラスを追加」を押してください</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 結果表示画面 -->
+  <div id="app-result" class="screen">
+    <div class="result-header">
+      <div class="result-header-info">
+        <span id="result-class-name" class="result-class"></span>
+        <span id="result-group-info" class="result-group-info"></span>
+      </div>
+      <div class="result-header-actions">
+        <button class="btn-reshuffle" id="btn-reshuffle">🔀 再シャッフル</button>
+        <button class="btn-back" id="btn-back">← 戻る</button>
+      </div>
+    </div>
+    <div id="result-container" class="result-container">
+    </div>
+  </div>
+
+  <!-- モーダル -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 id="modal-title"></h3>
+      <p id="modal-message"></p>
+      <div class="modal-actions">
+        <button id="modal-confirm" class="btn-modal-confirm">OK</button>
+        <button id="modal-cancel" class="btn-modal-cancel hidden">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
