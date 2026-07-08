@@ -763,7 +763,64 @@ body {
 }
 
 /* ===========================
-   SOLO RESULT (1人選出)
+   SOLO ELIMINATION (1人選出 消去演出)
+   =========================== */
+.solo-elim-wrapper {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  flex: 1;
+  align-content: center;
+  justify-items: center;
+  padding: 0 8px;
+  transition: opacity 0.5s ease;
+}
+
+.solo-elim-wrapper.solo-elim-fadeout {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.solo-elim-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  letter-spacing: 0.04em;
+  background: linear-gradient(145deg, #1e2d4f, #16213e);
+  border: 1px solid rgba(108, 99, 255, 0.25);
+  border-radius: var(--radius-sm);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  text-align: center;
+}
+
+.solo-elim-chip.eliminating {
+  opacity: 0;
+  transform: scale(0.5) rotateX(45deg);
+  filter: blur(4px);
+  border-color: rgba(255, 101, 132, 0.6);
+}
+
+.solo-elim-chip.eliminated {
+  visibility: hidden;
+}
+
+.solo-elim-chip.blurred {
+  filter: blur(10px) !important;
+  color: rgba(255,255,255,0.3) !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: filter 0.6s ease, color 0.6s ease, border-color 0.6s ease, background 0.6s ease !important;
+}
+
+/* ===========================
+   SOLO RESULT (1人選出 最終表示)
    =========================== */
 .solo-result-wrapper {
   flex: 1;
@@ -779,35 +836,121 @@ body {
 .solo-spotlight {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 45%, rgba(108, 99, 255, 0.18) 0%, transparent 70%);
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(255, 215, 0, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(108, 99, 255, 0.12) 0%, transparent 70%);
   pointer-events: none;
+  animation: spotlightPulse 3s ease-in-out infinite;
 }
 
-.solo-label {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+@keyframes spotlightPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
+/* 回転する光線 */
+.solo-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 0;
+  animation: raysRotate 20s linear infinite;
+}
+
+@keyframes raysRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 45vh;
+  transform-origin: 0 0;
+  background: linear-gradient(to top, rgba(255, 215, 0, 0.3), transparent 80%);
+  border-radius: 2px;
+  animation: rayFadeIn 1s ease-out both;
+}
+
+@keyframes rayFadeIn {
+  from { opacity: 0; height: 0; }
+  to { opacity: 1; height: 45vh; }
+}
+
+.ray:nth-child(1)  { transform: rotate(0deg); animation-delay: 0s; }
+.ray:nth-child(2)  { transform: rotate(30deg); animation-delay: 0.05s; }
+.ray:nth-child(3)  { transform: rotate(60deg); animation-delay: 0.1s; }
+.ray:nth-child(4)  { transform: rotate(90deg); animation-delay: 0.15s; }
+.ray:nth-child(5)  { transform: rotate(120deg); animation-delay: 0.2s; }
+.ray:nth-child(6)  { transform: rotate(150deg); animation-delay: 0.25s; }
+.ray:nth-child(7)  { transform: rotate(180deg); animation-delay: 0.3s; }
+.ray:nth-child(8)  { transform: rotate(210deg); animation-delay: 0.35s; }
+.ray:nth-child(9)  { transform: rotate(240deg); animation-delay: 0.4s; }
+.ray:nth-child(10) { transform: rotate(270deg); animation-delay: 0.45s; }
+.ray:nth-child(11) { transform: rotate(300deg); animation-delay: 0.5s; }
+.ray:nth-child(12) { transform: rotate(330deg); animation-delay: 0.55s; }
+
+/* 浮遊パーティクル */
+.solo-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.9), rgba(255, 180, 50, 0.4));
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  animation: particleFloat 4s ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
+  25% { transform: translateY(-30px) scale(1.3); opacity: 1; }
+  50% { transform: translateY(-15px) scale(0.8); opacity: 0.6; }
+  75% { transform: translateY(-40px) scale(1.1); opacity: 0.9; }
+}
+
+.particle:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; animation-duration: 3.5s; }
+.particle:nth-child(2) { top: 70%; left: 85%; animation-delay: 0.5s; animation-duration: 4.2s; }
+.particle:nth-child(3) { top: 30%; left: 75%; animation-delay: 1s; animation-duration: 3.8s; }
+.particle:nth-child(4) { top: 80%; left: 20%; animation-delay: 1.5s; animation-duration: 4.5s; }
+.particle:nth-child(5) { top: 15%; left: 50%; animation-delay: 0.8s; animation-duration: 3.2s; }
+.particle:nth-child(6) { top: 60%; left: 40%; animation-delay: 2s; animation-duration: 4s; }
+.particle:nth-child(7) { top: 45%; left: 90%; animation-delay: 0.3s; animation-duration: 3.6s; }
+.particle:nth-child(8) { top: 85%; left: 60%; animation-delay: 1.2s; animation-duration: 4.8s; }
+
+/* 名前カード */
 .solo-name-card {
   background: linear-gradient(145deg, #1e2d4f, #16213e);
-  border: 2px solid rgba(108, 99, 255, 0.5);
+  border: 2px solid rgba(255, 215, 0, 0.5);
   border-radius: 24px;
   padding: 48px 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 60px rgba(108, 99, 255, 0.35), 0 16px 48px rgba(0,0,0,0.6);
-  animation: soloCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  box-shadow:
+    0 0 80px rgba(255, 215, 0, 0.25),
+    0 0 40px rgba(108, 99, 255, 0.2),
+    0 16px 48px rgba(0,0,0,0.6),
+    inset 0 0 30px rgba(255, 215, 0, 0.05);
+  animation: soloCardIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   position: relative;
   z-index: 1;
 }
 
 @keyframes soloCardIn {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.3); filter: blur(10px); }
+  50%  { opacity: 1; filter: blur(0); }
+  to   { opacity: 1; transform: scale(1); filter: blur(0); }
 }
 
 .solo-name {
@@ -815,20 +958,40 @@ body {
   font-weight: 900;
   color: #fff;
   letter-spacing: 0.08em;
-  text-shadow: 0 0 40px rgba(108, 99, 255, 0.8), 0 2px 8px rgba(0,0,0,0.6);
+  text-shadow:
+    0 0 40px rgba(255, 215, 0, 0.6),
+    0 0 80px rgba(108, 99, 255, 0.4),
+    0 2px 8px rgba(0,0,0,0.6);
   white-space: nowrap;
+  animation: nameGlow 2s ease-in-out infinite;
 }
 
-.solo-stars {
-  display: flex;
-  gap: 12px;
-  font-size: 32px;
-  animation: starsPulse 1.5s ease-in-out infinite;
+@keyframes nameGlow {
+  0%, 100% { text-shadow: 0 0 40px rgba(255, 215, 0, 0.6), 0 0 80px rgba(108, 99, 255, 0.4), 0 2px 8px rgba(0,0,0,0.6); }
+  50% { text-shadow: 0 0 60px rgba(255, 215, 0, 0.9), 0 0 120px rgba(108, 99, 255, 0.6), 0 2px 8px rgba(0,0,0,0.6); }
 }
 
-@keyframes starsPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.15); opacity: 0.8; }
+/* グローリング */
+.solo-glow-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 400px;
+  height: 400px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 215, 0, 0.2);
+  box-shadow:
+    0 0 60px rgba(255, 215, 0, 0.15),
+    inset 0 0 60px rgba(255, 215, 0, 0.08);
+  animation: glowRingPulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes glowRingPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+  50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
 }
 
 /* ===========================

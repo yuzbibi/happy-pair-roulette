@@ -543,10 +543,16 @@ class PairMakerApp {
     const cls = this.data.getClass(this.selectedClassId);
     const available = cls.students.filter(s => !this.absentStudents.has(s));
 
+    // 進行中の1人選出アニメーションがあればキャンセル
+    if (this.soloTimers) {
+      this.soloTimers.forEach(t => clearTimeout(t));
+      this.soloTimers = null;
+    }
+
     // 1人選出モード
     if (this.groupSize === 1) {
       const picked = available[Math.floor(Math.random() * available.length)];
-      this.showSoloResult(cls.name, picked);
+      this.showSoloResult(cls.name, available, picked);
       return;
     }
 
@@ -561,25 +567,122 @@ class PairMakerApp {
     this.showResult(cls.name, result);
   }
 
-  showSoloResult(className, name) {
+  showSoloResult(className, allStudents, pickedName) {
     document.getElementById('result-class-name').textContent = className;
     document.getElementById('result-group-info').textContent = '1人選出';
 
     const container = document.getElementById('result-container');
     container.innerHTML = '';
 
+    // 全員をグリッドに表示
     const wrapper = document.createElement('div');
-    wrapper.className = 'solo-result-wrapper';
-    wrapper.innerHTML = `
-      <div class="solo-spotlight"></div>
-      <div class="solo-name-card">
-        <div class="solo-name">${this.esc(name)}</div>
-      </div>
-    `;
+    wrapper.className = 'solo-elim-wrapper';
+
+    // フォントサイズ
+    const n = allStudents.length;
+    const fontSize = 48;
+
+    // 列数を決定
+    let cols;
+    if (n <= 4) cols = 2;
+    else if (n <= 9) cols = 3;
+    else if (n <= 16) cols = 4;
+    else if (n <= 25) cols = 5;
+    else cols = 6;
+
+    wrapper.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+    const chips = [];
+    allStudents.forEach(name => {
+      const chip = document.createElement('div');
+      chip.className = 'solo-elim-chip';
+      chip.textContent = name;
+      chip.style.fontSize = `${fontSize}px`;
+      chip.dataset.name = name;
+      wrapper.appendChild(chip);
+      chips.push(chip);
+    });
+
     container.appendChild(wrapper);
 
+    // 画面切り替え
     document.getElementById('app-admin').classList.remove('active');
     document.getElementById('app-result').classList.add('active');
+
+    // 消す順番を決定（pickedName以外をシャッフル）
+    const toRemove = allStudents.filter(s => s !== pickedName);
+    for (let i = toRemove.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [toRemove[i], toRemove[j]] = [toRemove[j], toRemove[i]];
+    }
+
+    // 残り3人になったら消去をストップしてぼかし→フェードアウト
+    const removeCount = toRemove.length;
+    const stopAt = Math.min(2, removeCount); // 残り3人（= picked + 2人）で止める
+    const elimCount = removeCount - stopAt; // 実際に消す人数
+
+    // elimCount人を消す時間配分
+    const elimDuration = 8000; // 8秒で消去
+    const intervals = [];
+    for (let i = 0; i < elimCount; i++) {
+      const progress = i / Math.max(elimCount, 1);
+      intervals.push(200 + (elimDuration / Math.max(elimCount, 1)) * (0.4 + progress * 1.2));
+    }
+    if (intervals.length > 0) {
+      const sumIntervals = intervals.reduce((a, b) => a + b, 0);
+      const scale = elimDuration / sumIntervals;
+      for (let i = 0; i < intervals.length; i++) intervals[i] *= scale;
+    }
+
+    // タイマーで1人ずつ消す
+    this.soloTimers = [];
+    let elapsed = 0;
+
+    // フェーズ1: 1人ずつ消す（残り3人まで）
+    for (let idx = 0; idx < elimCount; idx++) {
+      elapsed += intervals[idx];
+      const name = toRemove[idx];
+      const timer = setTimeout(() => {
+        const chip = wrapper.querySelector(`[data-name="${CSS.escape(name)}"]`);
+        if (chip) {
+          chip.classList.add('eliminating');
+          setTimeout(() => chip.classList.add('eliminated'), 400);
+        }
+      }, elapsed);
+      this.soloTimers.push(timer);
+    }
+
+    // フェーズ2: 残り3人をぼかす
+    const blurTime = elapsed + 500;
+    this.soloTimers.push(setTimeout(() => {
+      wrapper.querySelectorAll('.solo-elim-chip:not(.eliminated)').forEach(c => {
+        c.classList.add('blurred');
+      });
+    }, blurTime));
+
+    // フェーズ3: グリッド全体をフェードアウト
+    const fadeTime = blurTime + 1500;
+    this.soloTimers.push(setTimeout(() => {
+      this.showSoloFinal(wrapper, container, pickedName);
+    }, fadeTime));
+  }
+
+  showSoloFinal(wrapper, container, pickedName) {
+    // グリッドをフェードアウト
+    wrapper.classList.add('solo-elim-fadeout');
+
+    setTimeout(() => {
+      container.innerHTML = '';
+
+      const finalWrapper = document.createElement('div');
+      finalWrapper.className = 'solo-result-wrapper';
+      finalWrapper.innerHTML = `
+        <div class="solo-name-card">
+          <div class="solo-name">${this.esc(pickedName)}</div>
+        </div>
+      `;
+      container.appendChild(finalWrapper);
+    }, 600);
   }
 
   showResult(className, result) {
